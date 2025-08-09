@@ -58,7 +58,7 @@ docker compose up -d chromadb
 ### 대화 인제스트
 
 ```bash
-rag-engine ingest --msg "안녕하세요" --msg "주문 123은 내일 배송 예정입니다."
+rag-engine ingest --msg "Q: 안녕하세요" --msg "A: 무엇을 도와드릴까요?" --msg "Q: 주문 123 배송 일정이 궁금합니다"
 ```
 
 또는 파일 입력(JSON 배열 또는 줄바꿈 분리):
@@ -67,11 +67,81 @@ rag-engine ingest --msg "안녕하세요" --msg "주문 123은 내일 배송 예
 rag-engine ingest --from-file ./examples/chat.json
 ```
 
+#### 입력 파일 포맷 명세
+
+- JSON 배열 형식(권장): 문자열 요소들의 배열
+  - 예: `examples/chat.json`
+  - 형식: `[
+  "발화1",
+  "발화2",
+  ...
+]`
+- 줄바꿈 분리 텍스트(.txt 등): 각 줄이 한 발화로 처리됨
+
+예시 파일 생성(Q/A 접두어 권장/강제):
+
+```bash
+mkdir -p rag-engine/examples
+cat > rag-engine/examples/chat.json << 'JSON'
+[
+  "Q: 안녕하세요, 고객지원입니다.",
+  "A: 안녕하세요! 무엇을 도와드릴까요?",
+  "Q: 주문 123번 상태가 어떻게 되나요?",
+  "A: 내일(5/11) 택배 발송 예정입니다."
+]
+JSON
+```
+
+실행 예시와 출력(요약):
+
+```bash
+rag-engine ingest --from-file ./examples/chat.json
+# {
+#   "id": "<UUID>",
+#   "text": "...전처리된 단일 텍스트...",
+#   "vector_dim": 256
+# }
+```
+
 ### 유사도 검색
 
 ```bash
 rag-engine query --text "주문 123 배송 일정"
 ```
+
+옵션:
+
+- `-k <int>`: 반환할 결과 수(기본 `DEFAULT_TOP_K`, 기본값 5)
+
+### Q/A 패턴 강제
+
+- 모든 입력 발화는 `Q:` 또는 `A:` 접두어를 사용합니다. 접두어가 없으면 엔진이 자동으로 교정합니다(짝수=Q, 홀수=A).
+- 역할 기반 형식도 지원합니다: `[{"role":"user","content":"..."},{"role":"assistant","content":"..."}]` → Q/A로 정규화됨.
+- 전처리는 Q/A 레이블을 보존하여 임베딩 친화적인 텍스트로 변환합니다.
+
+### 배치 인제스트(여러 대화)
+
+여러 개의 대화를 한 번에 처리하려면 배치 명령을 사용합니다.
+
+```bash
+# 디렉토리에서 .json/.txt/.jsonl 스캔
+rag-engine ingest-batch --from-dir ./datasets/chats --source support-logs
+
+# JSONL(한 줄당 한 대화):
+# - ["...", "..."] 또는 {"messages": ["..."]}
+rag-engine ingest-batch --from-jsonl ./datasets/chats.jsonl
+
+# 단일 파일 내 다중 대화: [["..."], ["..."]]
+rag-engine ingest-batch --from-file ./datasets/multi.json
+```
+
+입력 형식:
+
+- 디렉토리: 확장자별 처리
+  - `.json`: `["..."]` 또는 `[["..."],["..."]]`
+  - `.txt`: 줄바꿈 분리(한 파일=한 대화)
+  - `.jsonl`: 한 줄당 한 대화. 라인은 `["..."]` 또는 `{ "messages": ["..."] }`
+- 메타데이터: `source`, `batch_index`, `origin(파일명)`가 자동 주입됩니다.
 
 ## 임베딩 백엔드
 

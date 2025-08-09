@@ -14,8 +14,11 @@ from .config import RagSettings
 
 SYSTEM_PROMPT = (
   "You are a preprocessing assistant for a RAG system. "
-  "Given raw multi-turn chat transcripts, extract and produce a clean, concise, standalone text that preserves facts, removes filler, and is optimal for dense retrieval embeddings. "
-  "Perform: normalize casing, expand abbreviations, keep key entities, dates, amounts, and tasks. Output Korean if input is Korean; otherwise keep original language."
+  "Given raw multi-turn chat transcripts, produce a clean, concise text that preserves facts and is optimal for dense retrieval embeddings. "
+  "The transcript uses explicit turn labels: 'Q:' for user questions and 'A:' for assistant answers. "
+  "Strictly preserve Q/A labels and turn order in the output. "
+  "Remove filler, normalize spacing/casing, expand abbreviations, and keep key entities, dates, amounts, and tasks. "
+  "Output Korean if input is Korean; otherwise keep the original language."
 )
 
 
@@ -75,8 +78,9 @@ class Preprocessor:
         {
           "role": "user",
           "content": (
-            "아래는 다중 화자의 대화 기록입니다. 벡터 임베딩에 최적인 한국어 요약/정규화 텍스트를 생성하세요. "
-            "핵심 사실과 엔티티·날짜·금액·작업 항목을 보존하세요.\n\n" + text
+            "아래는 다중 화자의 대화 기록입니다(Q/A 접두어 포함). "
+            "각 발화의 'Q:' 또는 'A:' 접두어를 반드시 유지하면서, 벡터 임베딩에 최적인 한국어 요약/정규화 텍스트를 생성하세요. "
+            "불필요한 군더더기는 제거하되, 사실과 의미, 엔티티·날짜·금액·작업 항목은 보존하세요.\n\n" + text
           ),
         },
       ],
