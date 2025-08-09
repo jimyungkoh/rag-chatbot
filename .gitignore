@@ -31,3 +31,11 @@
 **/*~
 **/.DS_Store
 **/.Thumbs.db
+
+# nodeJS 프로젝트 관련 파일
+**/node_modules/
+
+# 빌드 관련 파일
+**/dist/
+**/build/
+**/out/
