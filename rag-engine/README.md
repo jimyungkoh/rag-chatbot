@@ -34,11 +34,11 @@ docker compose up -d chromadb
 - `OPENROUTER_API_KEY`: 전처리에 OpenRouter 사용 시 필요. 미설정 시 로컬 휴리스틱 전처리 사용
 - `OPENROUTER_BASE_URL` (기본 `https://openrouter.ai/api/v1`)
 - `OPENROUTER_MODEL` (기본 `openai/gpt-5-nano`)
-- `EMBEDDING_MODEL_ID` (기본 `minishlab/potion-multilingual-128M`)
+- `EMBEDDING_MODEL_ID` (고정 `minishlab/potion-multilingual-128M` 권장)
 - `EMBEDDING_DEVICE` (기본 `cpu`)
 - `CHROMA_HOST` (기본 `localhost`)
 - `CHROMA_PORT` (기본 `8000`)
-- `CHROMA_COLLECTION` (기본 `conversations`)
+- `CHROMA_COLLECTION` (기본 `conversations`) — 본 프로젝트는 256차원(Potion)만 사용합니다.
 - `DEFAULT_TOP_K` (기본 `5`)
 
 ### DEFAULT_TOP_K

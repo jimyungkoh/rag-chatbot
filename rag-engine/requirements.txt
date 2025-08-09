@@ -4,7 +4,6 @@ pydantic>=2.7.0
 python-dotenv>=1.0.1
 numpy>=1.26.4
 sentence-transformers>=2.7.0
-# Primary target (install if available). If not found, embedder falls back to sentence-transformers.
-# model2vec>=0.1.0
+model2vec>=0.6.0
 
 

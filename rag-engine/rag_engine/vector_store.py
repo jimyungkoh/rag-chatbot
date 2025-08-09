@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Iterable
 from pathlib import Path
 
 import chromadb
+from chromadb.errors import InvalidArgumentError, NotFoundError  # type: ignore
 
 from .config import RagSettings
 
@@ -41,10 +42,32 @@ class ChromaVectorStore:
       return self.client.create_collection(name=name)
 
   def upsert(self, ids: List[str], embeddings: List[List[float]], documents: Iterable[str], metadatas: Iterable[Dict[str, Any]] | None = None) -> None:
-    """벡터/문서/메타데이터 업서트."""
+    """벡터/문서/메타데이터 업서트.
+
+    - 컬렉션이 삭제된 상태(핸들 유효하지 않음) → 재획득 후 재시도
+    - 임베딩 차원 불일치(예: 기존 384d 컬렉션) → 컬렉션 삭제 후 재생성 및 재시도
+    """
     docs = list(documents)
     metas = list(metadatas) if metadatas is not None else None
-    self.collection.upsert(ids=ids, embeddings=embeddings, documents=docs, metadatas=metas)
+    try:
+      self.collection.upsert(ids=ids, embeddings=embeddings, documents=docs, metadatas=metas)
+      return
+    except NotFoundError:
+      # Refresh handle and retry once
+      self.collection = self._get_or_create_collection(self.settings.chroma_collection)
+      self.collection.upsert(ids=ids, embeddings=embeddings, documents=docs, metadatas=metas)
+      return
+    except InvalidArgumentError as e:
+      # Dimension mismatch; enforce 256d-only by recreating collection
+      if "dimension" in str(e).lower():
+        try:
+          self.client.delete_collection(name=self.settings.chroma_collection)
+        except Exception:
+          pass
+        self.collection = self._get_or_create_collection(self.settings.chroma_collection)
+        self.collection.upsert(ids=ids, embeddings=embeddings, documents=docs, metadatas=metas)
+        return
+      raise
 
   def query(self, query_embeddings: List[List[float]], top_k: int) -> Dict[str, Any]:
     """Top-K 유사도 검색 결과 반환."""

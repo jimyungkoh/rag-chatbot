@@ -46,6 +46,12 @@ class EmbeddingModel:
       LOGGER.info("Loaded Potion model via model2vec: %s", self.settings.embedding_model_id)
       return
     except Exception as e:
+      # If Potion is explicitly requested, do not fallback
+      if "minishlab/potion" in (self.settings.embedding_model_id or ""):
+        raise RuntimeError(
+          "Potion (minishlab/potion-multilingual-128M) is required but model2vec is not available. "
+          "Install with: pip install model2vec. Original error: %s" % e
+        )
       LOGGER.warning("Potion/model2vec not available (%s). Falling back to sentence-transformers.", e)
 
     # Fallback: sentence-transformers
