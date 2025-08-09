@@ -41,6 +41,18 @@ docker compose up -d chromadb
 - `CHROMA_COLLECTION` (기본 `conversations`)
 - `DEFAULT_TOP_K` (기본 `5`)
 
+### DEFAULT_TOP_K
+
+- 정의: 유사도 검색 시 반환할 결과 개수의 기본값
+- 위치: `rag_engine/config.py`의 `RagSettings.default_top_k` (기본 5)
+- 사용처: `RagPipeline.similarity_search()`에서 `top_k` 미지정 시 사용
+- 우선순위: 메서드 인자(`top_k`) > 환경변수(`DEFAULT_TOP_K`) > 기본값(5)
+- 변경 방법:
+  - 일시: `rag-engine query --text "..." -k 8`
+  - 전역(세션): `export DEFAULT_TOP_K=10`
+- 트레이드오프: 값이 크면 recall↑(더 많이 가져옴) 대신 지연/후처리 비용↑, 작으면 precision↑/지연↓
+- 권장 범위: Q&A 3~10, 브라우징/요약 10~20, 실시간 응답 3~5
+
 ## 사용법
 
 ### 대화 인제스트
