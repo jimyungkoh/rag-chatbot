@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: rag-chatbot-chromadb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - IS_PERSISTENT=TRUE
+    volumes:
+      - chromadb-data:/chroma
+
+volumes:
+  chromadb-data:
+    driver: local
