@@ -143,6 +143,127 @@ rag-engine ingest-batch --from-file ./datasets/multi.json
   - `.jsonl`: 한 줄당 한 대화. 라인은 `["..."]` 또는 `{ "messages": ["..."] }`
 - 메타데이터: `source`, `batch_index`, `origin(파일명)`가 자동 주입됩니다.
 
+#### 메타데이터 상세: `source`/`batch_index`/`origin`
+
+- `source`: 도메인/수집원을 나타내는 자유형 태그. 검색 결과의 `metadatas`에 그대로 노출됩니다.
+  - 예: `support-logs`(고객지원/헬프데스크 상담 로그), `sales-chats`(영업 대화), `forum`(포럼 글), `doc`(문서 요약)
+  - 용도: 출처 추적, 필터링/세그멘테이션 전략 수립(컬렉션을 나눌지 `source`로 구분할지 결정)
+  - 권장: 조직/도메인/프로젝트 단위로 일관된 네이밍 사용. 대규모 분리는 `CHROMA_COLLECTION`으로 컬렉션을 분리
+- `batch_index`: 배치 내 처리 순번(0부터 시작). 재현성/로그 추적에 사용
+- `origin`: 원본 파일명 또는 JSONL 라인 출처(예: `file:chat.json`, `jsonl:chats.jsonl`)
+
+#### 배치 인제스트 예시
+
+1. 디렉토리 기반(from-dir)
+
+```bash
+cd rag-engine
+mkdir -p datasets/chats
+
+# 단일 대화(JSON 배열)
+cat > datasets/chats/chat1.json << 'JSON'
+[
+  "Q: 반품하려면 어떻게 하나요?",
+  "A: 주문번호와 사유를 알려주시면 절차를 안내드립니다."
+]
+JSON
+
+# 단일 대화(줄바꿈 분리 텍스트)
+cat > datasets/chats/chat2.txt << 'TXT'
+Q: 재고가 언제 입고되나요?
+A: 다음 주 수요일 예정입니다.
+TXT
+
+# 다중 대화(JSON 배열의 배열)
+cat > datasets/chats/multi.json << 'JSON'
+[
+  [
+    "Q: 쿠폰 적용이 안돼요.",
+    "A: 적용 조건(최소금액/카테고리)을 확인해주세요."
+  ],
+  [
+    "Q: 계산서 발급 가능한가요?",
+    "A: 네, 사업자등록증을 보내주시면 발급해드립니다."
+  ]
+]
+JSON
+
+# JSONL(한 줄당 한 대화): 문자열 배열 또는 {messages: [...]} 또는 {q: "..", a: ".."}
+cat > datasets/chats/chats.jsonl << 'JSONL'
+["Q: 배송지 변경 가능할까요?", "A: 출고 전이면 가능합니다."]
+{"messages": [{"role":"user","content":"Q: 결제수단 변경은?"}, {"role":"assistant","content":"A: 주문서에서 가능합니다."}]}
+{"q":"교환 규정 알려주세요.", "a":"상품 수령 후 7일 이내 가능합니다."}
+JSONL
+
+# 배치 인제스트 실행
+rag-engine ingest-batch --from-dir ./datasets/chats --source support-logs
+```
+
+예상 출력(요약):
+
+```json
+{
+  "count": 5,
+  "items": [
+    { "id": "...", "text": "Q: 반품하려면...\nA: 주문번호...", "vector_dim": 256|384 },
+    { "id": "...", "text": "Q: 재고가...\nA: 다음 주...", "vector_dim": 256|384 },
+    { "id": "...", "text": "Q: 쿠폰...\nA: 적용 조건...", "vector_dim": 256|384 },
+    { "id": "...", "text": "Q: 계산서...\nA: 네...", "vector_dim": 256|384 },
+    { "id": "...", "text": "Q: 배송지...\nA: 출고 전...", "vector_dim": 256|384 }
+  ]
+}
+```
+
+2. JSONL 파일만 사용하는 경우(from-jsonl)
+
+```bash
+cd rag-engine
+cat > datasets/chats_only.jsonl << 'JSONL'
+["Q: A/S 접수는 어디서 하나요?", "A: 고객센터 페이지에서 가능합니다."]
+{"messages": ["Q: 영수증 재발행 가능?", "A: 네, 마이페이지에서 다운로드 가능."]}
+JSONL
+
+rag-engine ingest-batch --from-jsonl ./datasets/chats_only.jsonl --source support-logs
+```
+
+예상 출력(요약):
+
+```json
+{
+  "count": 2,
+  "items": [
+    { "id": "...", "text": "Q: A/S 접수는 어디서 하나요?\nA: 고객센터 페이지에서 가능합니다.", "vector_dim": 256|384 },
+    { "id": "...", "text": "Q: 영수증 재발행 가능?\nA: 네, 마이페이지에서 다운로드 가능.", "vector_dim": 256|384 }
+  ]
+}
+```
+
+3. 한 파일 안에 여러 대화(from-file, nested arrays)
+
+```bash
+cd rag-engine
+cat > datasets/multi_nested.json << 'JSON'
+[
+  ["Q: 회원등급 기준은?", "A: 누적 구매액으로 산정됩니다."],
+  ["Q: 해외배송 가능?", "A: 일부 국가만 지원합니다."]
+]
+JSON
+
+rag-engine ingest-batch --from-file ./datasets/multi_nested.json --source support-logs
+```
+
+예상 출력(요약):
+
+```json
+{
+  "count": 2,
+  "items": [
+    { "id": "...", "text": "Q: 회원등급 기준은?\nA: 누적 구매액으로 산정됩니다.", "vector_dim": 256|384 },
+    { "id": "...", "text": "Q: 해외배송 가능?\nA: 일부 국가만 지원합니다.", "vector_dim": 256|384 }
+  ]
+}
+```
+
 ## 임베딩 백엔드
 
 - 기본: Potion `minishlab/potion-multilingual-128M` (model2vec가 설치되어 있어야 함)
