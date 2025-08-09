@@ -8,6 +8,11 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 import os
+try:
+  from dotenv import load_dotenv  # type: ignore
+  load_dotenv()
+except Exception:
+  pass
 
 
 class RagSettings(BaseModel):
