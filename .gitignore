@@ -1,1 +1,33 @@
-design-docs/**/*
+# 디자인 문서
+**/design-docs/**/*
+
+# 환경 변수 및 설정 파일
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# 환경별 설정 디렉토리
+**/config/local.*
+**/config/dev.*
+**/config/staging.*
+**/config/prod.*
+
+# 민감한 설정 파일
+**/secrets/
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**id_rsa*
+**config/secrets.*
+
+# 로컬 개발 도구 설정
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/*~
+**/.DS_Store
+**/.Thumbs.db
