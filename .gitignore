@@ -1,5 +1,7 @@
-# 디자인 문서
+# 문서
 **/design-docs/**/*
+**/.cursor
+**/Claude.md
 
 # 환경 변수 및 설정 파일
 **/.env
@@ -39,3 +41,5 @@
 **/dist/
 **/build/
 **/out/
+
+
