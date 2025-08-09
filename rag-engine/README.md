@@ -97,7 +97,7 @@ JSON
 ```bash
 rag-engine ingest --from-file ./examples/chat.json
 # {
-#   "id": "<UUID>",
+#   "id": "<nanoid>",
 #   "text": "...전처리된 단일 텍스트...",
 #   "vector_dim": 256
 # }

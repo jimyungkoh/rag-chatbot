@@ -5,7 +5,14 @@
 from __future__ import annotations
 
 from typing import Iterable, Dict, Any, List
-import uuid
+try:
+  from nanoid import generate as nanoid_generate  # type: ignore
+except Exception:  # pragma: no cover
+  # Fallback minimal generator if nanoid is unavailable at import time
+  import random, string
+  def nanoid_generate(size: int = 21) -> str:
+    alphabet = string.ascii_letters + string.digits + "-_"
+    return "".join(random.choice(alphabet) for _ in range(size))
 
 from .config import RagSettings
 from .preprocess import Preprocessor
@@ -33,7 +40,7 @@ class RagPipeline:
     """
     preprocessed = await self.preprocessor.preprocess(messages)
     vectors = self.embedder.embed([preprocessed])
-    doc_id = str(uuid.uuid4())
+    doc_id = nanoid_generate()
     self.store.upsert(
       ids=[doc_id],
       embeddings=vectors,
