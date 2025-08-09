@@ -1,0 +1,12 @@
+{
+  "name": "rag-chatbot",
+  "version": "1.0.0",
+  "description": "LLM을 기반의 챗봇 애플리케이션 실험실",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Jimyung Ko <aqaqeqeq0511@gmail.com>",
+  "license": "ISC"
+}
