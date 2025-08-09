@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-engine"
+version = "0.1.0"
+description = "RAG preprocessing + embedding + Chroma vector store pipeline"
+authors = [
+  {name = "RAG Chatbot"}
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+rag-engine = "rag_engine.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rag_engine*"]
+
+
