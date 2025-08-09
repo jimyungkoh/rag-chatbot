@@ -10,8 +10,4 @@ services:
     environment:
       - IS_PERSISTENT=TRUE
     volumes:
-      - chromadb-data:/chroma
-
-volumes:
-  chromadb-data:
-    driver: local
+      - ./content/chromadb:/chroma

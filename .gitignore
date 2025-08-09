@@ -80,3 +80,5 @@
 **/.cache/
 **/.benchmarks/
 
+# 볼륨 마운트 디렉토리
+**/content/
