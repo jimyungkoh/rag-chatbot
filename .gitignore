@@ -43,3 +43,40 @@
 **/out/
 
 
+
+# Python (rag-engine) 관련 무시 규칙
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+
+# 가상환경/툴링
+**/.venv/
+**/venv/
+**/.python-version
+**/.ruff_cache/
+**/.mypy_cache/
+**/.pytype/
+**/.pytest_cache/
+**/.hypothesis/
+**/.ipynb_checkpoints/
+
+# 패키징/배포 산출물
+**/*.egg
+**/*.egg-info/
+**/.eggs/
+**/sdist/
+**/wheel/
+**/htmlcov/
+**/.coverage
+**/.coverage.*
+**/coverage.xml
+
+# 테스트/리포트 아티팩트 추가
+**/junit.xml
+**/test-results/
+**/test-reports/
+**/.tox/
+**/.nox/
+**/.cache/
+**/.benchmarks/
+
