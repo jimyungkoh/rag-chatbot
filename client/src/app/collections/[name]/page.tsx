@@ -49,43 +49,43 @@ export default function CollectionDetailPage() {
   return (
     <div>
       <Nav />
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+      <main className="px-4 py-6 mx-auto max-w-6xl">
+        <div className="flex gap-2 items-center mb-4 text-sm text-muted-foreground">
           <Link href="/collections" className="underline">Collections</Link>
           <span>/</span>
           <span className="text-foreground">{decName}</span>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="border rounded p-4">
+        <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
+          <div className="p-4 rounded border">
             <div className="text-sm text-muted-foreground">문서 수</div>
             <div className="text-2xl font-semibold">{stats?.count ?? '-'}</div>
           </div>
-          <div className="border rounded p-4">
+          <div className="p-4 rounded border">
             <div className="text-sm text-muted-foreground">임베딩 차원</div>
             <div className="text-2xl font-semibold">{stats?.dimension ?? '-'}</div>
           </div>
         </div>
 
         <div className="mb-4">
-          <h2 className="font-semibold mb-2">텍스트 추가</h2>
+          <h2 className="mb-2 font-semibold">텍스트 추가</h2>
           <div className="flex gap-2">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="문서를 입력하세요"
-              className="border rounded px-2 py-1 w-full h-24"
+              className="px-2 py-1 w-full h-24 rounded border"
             />
             <button
               onClick={() => text && addTextMut.mutate(text)}
-              className="border rounded px-3 py-1 min-w-24"
+              className="px-3 py-1 rounded border min-w-24"
             >
               추가
             </button>
           </div>
         </div>
 
-        <h2 className="font-semibold mb-2">문서 목록</h2>
+        <h2 className="mb-2 font-semibold">문서 목록</h2>
         {isLoading ? (
           <div>로딩중...</div>
         ) : (
@@ -110,19 +110,19 @@ function DocsTable({ data, onDelete }: { data: ChromaGetResult | undefined; onDe
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="flex gap-2 items-center mb-2">
         <button
-          className="border rounded px-3 py-1 disabled:opacity-50"
+          className="px-3 py-1 rounded border disabled:opacity-50"
           onClick={() => onDelete(checkedIds)}
           disabled={checkedIds.length === 0}
         >
           선택 삭제
         </button>
       </div>
-      <div className="overflow-x-auto border rounded">
+      <div className="overflow-x-auto rounded border">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="bg-muted text-left">
+            <tr className="text-left bg-muted">
               <th className="p-2">선택</th>
               <th className="p-2">ID</th>
               <th className="p-2">문서</th>
@@ -131,14 +131,14 @@ function DocsTable({ data, onDelete }: { data: ChromaGetResult | undefined; onDe
           </thead>
           <tbody>
             {allRows.map((row) => (
-              <tr key={row.id} className="border-t align-top">
+              <tr key={row.id} className="align-top border-t">
                 <td className="p-2">
                   <input type="checkbox" checked={!!selected[row.id]} onChange={() => toggle(row.id)} />
                 </td>
-                <td className="p-2 whitespace-nowrap font-mono text-xs">{row.id}</td>
+                <td className="p-2 font-mono text-xs whitespace-nowrap">{row.id}</td>
                 <td className="p-2 whitespace-pre-wrap">{row.doc}</td>
                 <td className="p-2">
-                  <pre className="text-xs bg-muted rounded p-2 overflow-x-auto">{JSON.stringify(row.meta, null, 2)}</pre>
+                  <pre className="overflow-x-auto p-2 text-xs rounded bg-muted">{JSON.stringify(row.meta, null, 2)}</pre>
                 </td>
               </tr>
             ))}

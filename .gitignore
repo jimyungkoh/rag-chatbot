@@ -71,6 +71,7 @@
 **/.coverage
 **/.coverage.*
 **/coverage.xml
+**/.pnpm-store/
 
 # 테스트/리포트 아티팩트 추가
 **/junit.xml

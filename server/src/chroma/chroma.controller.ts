@@ -1,5 +1,13 @@
 import { ChromaService } from '@/chroma/chroma.service';
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 
 @Controller('chroma')
 export class ChromaController {
