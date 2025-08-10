@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { ChromaGetResult } from "@/lib/types";
 
 const baseURL = process.env.NEXT_PUBLIC_SERVER_BASE_URL || "http://localhost:4000";
 
@@ -23,12 +24,12 @@ export interface QueryParams {
   include?: string[];
 }
 
-export async function getCollectionDocs(params: QueryParams) {
+export async function getCollectionDocs(params: QueryParams): Promise<ChromaGetResult> {
   const { name, limit, include } = params;
   const query = new URLSearchParams();
   if (limit) query.set("limit", String(limit));
   if (include && include.length) query.set("include", include.join(","));
-  const { data } = await api.get(`/chroma/collections/${encodeURIComponent(name)}?${query.toString()}`);
+  const { data } = await api.get<ChromaGetResult>(`/chroma/collections/${encodeURIComponent(name)}?${query.toString()}`);
   return data;
 }
 
