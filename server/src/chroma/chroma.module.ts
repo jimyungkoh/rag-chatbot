@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ChromaController } from './chroma.controller';
-import { ChromaService } from './chroma.service';
+import { ChromaController } from '@/chroma/chroma.controller';
+import { ChromaService } from '@/chroma/chroma.service';
 
 @Module({
   providers: [ChromaService],

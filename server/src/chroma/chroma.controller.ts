@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ChromaService } from './chroma.service';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { ChromaService } from '@/chroma/chroma.service';
 
 @Controller('chroma')
 export class ChromaController {
@@ -20,6 +20,41 @@ export class ChromaController {
     const lim = Number(limit || 20);
     const inc = include ? include.split(',').map((s) => s.trim()) : undefined;
     const res = await this.chroma.getDocuments(name, lim, inc);
+    return res;
+  }
+
+  @Post('collections')
+  async createCollection(@Body('name') name: string) {
+    return await this.chroma.createCollection(name);
+  }
+
+  @Post('collections/:name/add')
+  async add(
+    @Param('name') name: string,
+    @Body()
+    body: {
+      ids: string[];
+      embeddings?: number[][];
+      documents?: string[];
+      metadata?: Array<Record<string, string | number | boolean>>;
+    },
+  ) {
+    const res = await this.chroma.addDocuments({ name, ...body });
+    return res;
+  }
+
+  @Post('collections/:name/query')
+  async query(
+    @Param('name') name: string,
+    @Body()
+    body: {
+      queryEmbeddings?: number[][];
+      queryTexts?: string[];
+      nResults?: number;
+      include?: string[];
+    },
+  ) {
+    const res = await this.chroma.queryCollection({ name, ...body });
     return res;
   }
 }
