@@ -42,3 +42,27 @@ export async function addDocuments(name: string, payload: {
   const { data } = await api.post(`/chroma/collections/${encodeURIComponent(name)}/add`, payload);
   return data as { added: number };
 }
+
+export interface AnswerRequest {
+  collection: string;
+  question: string;
+  top_k?: number;
+  include?: string[];
+}
+
+export interface AnswerContextItem {
+  id: string;
+  document: string | null;
+  metadata: Record<string, unknown> | null;
+  distance: number | null;
+}
+
+export interface AnswerResponse {
+  answer: string;
+  contexts: AnswerContextItem[];
+}
+
+export async function askAnswer(payload: AnswerRequest): Promise<AnswerResponse> {
+  const { data } = await api.post<AnswerResponse>(`/chat/answer`, payload);
+  return data;
+}
