@@ -1,11 +1,11 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { ChromaClient } from 'chromadb';
 import type {
+  ChromaAddParams,
   ChromaCollection,
   ChromaGetResult,
   ChromaQueryResult,
   IncludeKey,
-  ChromaAddParams,
 } from './types';
 import { toIncludeEnums } from './types';
 
@@ -52,8 +52,7 @@ export class ChromaService {
       ? { limit, include: includeEnums }
       : { limit };
 
-    const res = await col.get(getParams);
-    return res;
+    return await col.get(getParams);
   }
 
   async createCollection(name: string): Promise<{ name: string }> {
@@ -82,7 +81,9 @@ export class ChromaService {
       );
     }
 
-    const addParams: Partial<ChromaAddParams> = { ids };
+    // chromadb AddRecordsParams의 대부분 필드는 선택(optional)이므로
+    // 불필요한 단언(as ...) 없이 정확한 타입으로 선언합니다.
+    const addParams: ChromaAddParams = { ids } as ChromaAddParams;
 
     if (embeddings) {
       addParams.embeddings = embeddings;
@@ -94,11 +95,14 @@ export class ChromaService {
       addParams.metadatas = metadatas;
     }
 
-    await col.add(addParams as ChromaAddParams);
+    await col.add(addParams);
     return { added: ids.length };
   }
 
-  async deleteDocuments(args: { name: string; ids: string[] }): Promise<{ deleted: number }> {
+  async deleteDocuments(args: {
+    name: string;
+    ids: string[];
+  }): Promise<{ deleted: number }> {
     const { name, ids } = args;
     const col = await this.getCollection(name);
     await col.delete({ ids });
@@ -110,7 +114,10 @@ export class ChromaService {
     const count = await col.count();
     let dimension: number | undefined = undefined;
     try {
-      const sample = await col.get({ limit: 1, include: toIncludeEnums(['embeddings']) });
+      const sample = await col.get({
+        limit: 1,
+        include: toIncludeEnums(['embeddings']),
+      });
       const emb = sample.embeddings?.[0];
       if (Array.isArray(emb)) {
         dimension = emb.length;
@@ -124,7 +131,9 @@ export class ChromaService {
   async renameCollection(_args: { name: string; to: string }): Promise<never> {
     // Renaming collections requires copy-and-migrate which may be heavy and error-prone.
     // Keep safe by not implementing implicit data moves.
-    throw new NotImplementedException('rename은 미지원입니다. 새 컬렉션 생성 후 재인제스트를 권장합니다.');
+    throw new NotImplementedException(
+      'rename은 미지원입니다. 새 컬렉션 생성 후 재인제스트를 권장합니다.',
+    );
   }
 
   async queryCollection(args: {
@@ -173,7 +182,6 @@ export class ChromaService {
       throw new Error('유효한 query 파라미터가 없습니다.');
     }
 
-    const res = await col.query(queryParams);
-    return res;
+    return await col.query(queryParams);
   }
 }
