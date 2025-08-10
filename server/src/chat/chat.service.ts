@@ -29,8 +29,7 @@ export class ChatService {
     this.openrouterApiKey = process.env.OPENROUTER_API_KEY || undefined;
     this.openrouterBaseUrl =
       process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-    this.openrouterModel =
-      process.env.OPENROUTER_MODEL || 'openai/gpt-5-nano';
+    this.openrouterModel = process.env.OPENROUTER_MODEL || 'openai/gpt-5-nano';
   }
 
   async answer(params: AnswerParams) {
