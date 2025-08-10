@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ChromaModule } from './chroma/chroma.module';
+import { AppController } from '@/app.controller';
+import { AppService } from '@/app.service';
+import { ChromaModule } from '@/chroma/chroma.module';
 
 @Module({
   imports: [ChromaModule],
