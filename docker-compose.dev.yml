@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: rag-chatbot-chromadb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - IS_PERSISTENT=TRUE
+    volumes:
+      - ./content/chromadb:/chroma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - rag-network
+
+  server:
+    build:
+      context: ./server
+    container_name: rag-chatbot-server-dev
+    restart: unless-stopped
+    environment:
+      - PORT=4000
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm start:dev"
+    volumes:
+      - ./server:/app
+      - server_node_modules:/app/node_modules
+    networks:
+      - rag-network
+
+  rag-engine:
+    build:
+      context: ./rag-engine
+    container_name: rag-chatbot-rag-engine-dev
+    restart: unless-stopped
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - CHROMA_COLLECTION=${CHROMA_COLLECTION:-conversations}
+      - EMBEDDING_MODEL_ID=${EMBEDDING_MODEL_ID:-minishlab/potion-multilingual-128M}
+      - EMBEDDING_DEVICE=${EMBEDDING_DEVICE:-cpu}
+      - DEFAULT_TOP_K=${DEFAULT_TOP_K:-5}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-openai/gpt-5-nano}
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    volumes:
+      - ./rag-engine:/app
+      - rag-engine-data:/app/data
+    command: bash -lc "pip install -e . && tail -f /dev/null"
+    networks:
+      - rag-network
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  rag-engine-data:
+  server_node_modules:
+
+
