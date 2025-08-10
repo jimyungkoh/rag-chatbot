@@ -53,7 +53,77 @@ docker compose up -d chromadb
 - 트레이드오프: 값이 크면 recall↑(더 많이 가져옴) 대신 지연/후처리 비용↑, 작으면 precision↑/지연↓
 - 권장 범위: Q&A 3~10, 브라우징/요약 10~20, 실시간 응답 3~5
 
-## 사용법
+## HTTP API (FastAPI)
+
+rag-engine은 FastAPI 기반 HTTP 서버로 실행되어 다음 엔드포인트를 제공합니다:
+
+```bash
+# HTTP 서버 시작
+uvicorn rag_engine.server:app --host 0.0.0.0 --port 5050
+```
+
+### API 엔드포인트
+
+#### `POST /rag/embed`
+텍스트 배열을 임베딩 벡터로 변환합니다.
+
+**요청:**
+```json
+{
+  "texts": ["안녕하세요", "반갑습니다"]
+}
+```
+
+**응답:**
+```json
+{
+  "embeddings": [[0.1, 0.2, ...], [0.3, 0.4, ...]],
+  "dimension": 256
+}
+```
+
+#### `POST /rag/ingest`
+대화 메시지를 전처리하고 ChromaDB에 저장합니다.
+
+**요청:**
+```json
+{
+  "messages": ["Q: 안녕하세요", "A: 무엇을 도와드릴까요?"],
+  "metadata": {"source": "chat", "user_id": "123"}
+}
+```
+
+**응답:**
+```json
+{
+  "id": "abc123",
+  "text": "Q: 안녕하세요\nA: 무엇을 도와드릴까요?",
+  "vector_dim": 256
+}
+```
+
+#### `POST /rag/query`
+텍스트 쿼리로 유사한 문서를 검색합니다.
+
+**요청:**
+```json
+{
+  "query_text": "배송 관련 질문",
+  "top_k": 5
+}
+```
+
+**응답:**
+```json
+{
+  "ids": [["doc1", "doc2"]],
+  "documents": [["Q: 배송은...", "Q: 언제 오나요..."]],
+  "metadatas": [[{"source": "chat"}, {"source": "support"}]],
+  "distances": [[0.1, 0.2]]
+}
+```
+
+## CLI 사용법
 
 ### 대화 인제스트
 
@@ -271,6 +341,38 @@ rag-engine ingest-batch --from-file ./datasets/multi_nested.json --source suppor
 
 model2vec가 PyPI에 없거나 설치 실패 시 자동으로 폴백됩니다.
 
+## Docker 구성
+
+개발 및 프로덕션 환경에서는 Docker Compose를 통해 실행됩니다:
+
+```bash
+# 개발 환경
+docker compose up -d rag-engine
+
+# 프로덕션 환경
+docker compose -f docker-compose.prod.yml up -d rag-engine
+```
+
+기본 포트: `5050` (HTTP API)
+
+## 시스템 통합
+
+rag-engine은 RAG 기반 채팅 시스템의 핵심 컴포넌트로 다음과 같이 연동됩니다:
+
+```
+client (Next.js) 
+  ↕ HTTP
+server (NestJS) 
+  ↕ HTTP (port 5050)
+rag-engine (FastAPI)
+  ↕ HTTP (port 8000)  
+ChromaDB (Docker)
+```
+
+**데이터 흐름:**
+1. **인제스트**: client → server → rag-engine (임베딩) → server → ChromaDB (저장)
+2. **검색/답변**: client → server → rag-engine (임베딩) → server → ChromaDB (검색) → server (LLM) → client
+
 ## 디렉토리 구조
 
 ```
@@ -282,9 +384,11 @@ rag-engine/
     embedding.py          # Potion 우선 임베더(ST 폴백)
     vector_store.py       # Chroma 어댑터(HTTP→로컬 영속→메모리 순 폴백)
     pipeline.py           # 전처리→임베딩→저장/검색 파이프라인 오케스트레이션
+    server.py             # FastAPI HTTP 서버 (신규)
     cli.py                # ingest/query CLI 엔트리포인트
   requirements.txt        # 런타임 의존성
   pyproject.toml          # 패키지/CLI 스크립트 정의
+  Dockerfile              # 컨테이너 빌드 설정
   README.md               # 사용 가이드
 ```
 
