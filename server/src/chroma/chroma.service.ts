@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 import { ChromaClient } from 'chromadb';
 import type {
   ChromaCollection,
@@ -61,6 +61,11 @@ export class ChromaService {
     return { name };
   }
 
+  async deleteCollection(name: string): Promise<{ deleted: boolean }> {
+    await this.client.deleteCollection({ name });
+    return { deleted: true };
+  }
+
   async addDocuments(args: {
     name: string;
     ids: string[];
@@ -91,6 +96,35 @@ export class ChromaService {
 
     await col.add(addParams as ChromaAddParams);
     return { added: ids.length };
+  }
+
+  async deleteDocuments(args: { name: string; ids: string[] }): Promise<{ deleted: number }> {
+    const { name, ids } = args;
+    const col = await this.getCollection(name);
+    await col.delete({ ids });
+    return { deleted: ids.length };
+  }
+
+  async getStats(name: string): Promise<{ count: number; dimension?: number }> {
+    const col = await this.getCollection(name);
+    const count = await col.count();
+    let dimension: number | undefined = undefined;
+    try {
+      const sample = await col.get({ limit: 1, include: toIncludeEnums(['embeddings']) });
+      const emb = sample.embeddings?.[0];
+      if (Array.isArray(emb)) {
+        dimension = emb.length;
+      }
+    } catch {
+      // ignore
+    }
+    return { count, dimension };
+  }
+
+  async renameCollection(_args: { name: string; to: string }): Promise<never> {
+    // Renaming collections requires copy-and-migrate which may be heavy and error-prone.
+    // Keep safe by not implementing implicit data moves.
+    throw new NotImplementedException('rename은 미지원입니다. 새 컬렉션 생성 후 재인제스트를 권장합니다.');
   }
 
   async queryCollection(args: {

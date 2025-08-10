@@ -1,5 +1,5 @@
 import { ChromaService } from '@/chroma/chroma.service';
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 
 @Controller('chroma')
 export class ChromaController {
@@ -26,6 +26,24 @@ export class ChromaController {
   @Post('collections')
   async createCollection(@Body('name') name: string) {
     return await this.chroma.createCollection(name);
+  }
+
+  @Delete('collections/:name')
+  async deleteCollection(@Param('name') name: string) {
+    return await this.chroma.deleteCollection(name);
+  }
+
+  @Post('collections/:name/delete')
+  async deleteDocuments(
+    @Param('name') name: string,
+    @Body() body: { ids: string[] },
+  ) {
+    return await this.chroma.deleteDocuments({ name, ids: body.ids });
+  }
+
+  @Get('collections/:name/stats')
+  async stats(@Param('name') name: string) {
+    return await this.chroma.getStats(name);
   }
 
   @Post('collections/:name/add')
