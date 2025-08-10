@@ -24,11 +24,14 @@ services:
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
       - CORS_ORIGIN=http://localhost:3000
+      - RAG_ENGINE_HOST=rag-engine
+      - RAG_ENGINE_PORT=5050
     depends_on:
       - chromadb
+      - rag-engine
     ports:
       - "4000:4000"
-    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm start:dev"
+    command: sh -c "corepack enable && pnpm install --no-frozen-lockfile && pnpm start:dev"
     volumes:
       - ./server:/app
       - server_node_modules:/app/node_modules
@@ -36,7 +39,8 @@ services:
       - rag-network
 
   rag-engine:
-    image: python:3.10-slim
+    build:
+      context: ./rag-engine
     container_name: rag-chatbot-rag-engine-dev
     restart: unless-stopped
     environment:
@@ -52,9 +56,11 @@ services:
     depends_on:
       - chromadb
     volumes:
-      - ./rag-engine:/app
+      - ./rag-engine/conversations:/app/conversations
+      - ./rag-engine/examples:/app/examples
       - rag-engine-data:/app/data
-    command: bash -lc "apt-get update && apt-get install -y netcat-openbsd && tail -f /dev/null"
+    ports:
+      - "5050:5050"
     networks:
       - rag-network
 
