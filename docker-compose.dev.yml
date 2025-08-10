@@ -11,11 +11,6 @@ services:
       - IS_PERSISTENT=TRUE
     volumes:
       - ./content/chromadb:/chroma
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     networks:
       - rag-network
 
@@ -30,8 +25,7 @@ services:
       - CHROMA_PORT=8000
       - CORS_ORIGIN=http://localhost:3000
     depends_on:
-      chromadb:
-        condition: service_healthy
+      - chromadb
     ports:
       - "4000:4000"
     command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm start:dev"
@@ -42,8 +36,7 @@ services:
       - rag-network
 
   rag-engine:
-    build:
-      context: ./rag-engine
+    image: python:3.10-slim
     container_name: rag-chatbot-rag-engine-dev
     restart: unless-stopped
     environment:
@@ -57,12 +50,11 @@ services:
       - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       - OPENROUTER_MODEL=${OPENROUTER_MODEL:-openai/gpt-5-nano}
     depends_on:
-      chromadb:
-        condition: service_healthy
+      - chromadb
     volumes:
       - ./rag-engine:/app
       - rag-engine-data:/app/data
-    command: bash -lc "pip install -e . && tail -f /dev/null"
+    command: bash -lc "apt-get update && apt-get install -y netcat-openbsd && tail -f /dev/null"
     networks:
       - rag-network
 
@@ -92,5 +84,3 @@ volumes:
   rag-engine-data:
   server_node_modules:
   client_node_modules:
-
-

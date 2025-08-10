@@ -11,11 +11,6 @@ services:
       - IS_PERSISTENT=TRUE
     volumes:
       - ./content/chromadb:/chroma
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     networks:
       - rag-network
 
@@ -30,8 +25,7 @@ services:
       - CHROMA_PORT=8000
       - CORS_ORIGIN=http://localhost:3000
     depends_on:
-      chromadb:
-        condition: service_healthy
+      - chromadb
     ports:
       - "4000:4000"
     networks:
@@ -67,8 +61,7 @@ services:
       - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       - OPENROUTER_MODEL=${OPENROUTER_MODEL:-openai/gpt-5-nano}
     depends_on:
-      chromadb:
-        condition: service_healthy
+      - chromadb
     volumes:
       - ./rag-engine/conversations:/app/conversations
       - ./rag-engine/examples:/app/examples
