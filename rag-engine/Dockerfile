@@ -49,4 +49,4 @@ exec $cmd' > /wait-for-it.sh && chmod +x /wait-for-it.sh
 RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 # 기본 명령어 설정 (대화형 모드)
-CMD ["bash"]
+CMD ["uvicorn", "rag_engine.api:app", "--host", "0.0.0.0", "--port", "5050"]
