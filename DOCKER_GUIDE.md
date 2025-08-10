@@ -49,8 +49,8 @@ COMPOSE_FILE=docker-compose.dev.yml ./rag-engine-cli.sh start
 ### 실행되는 서비스들
 
 - **ChromaDB**: `localhost:8000` - 벡터 데이터베이스
-- **Server**: `localhost:4000` - NestJS API 서버
-- **RAG Engine**: CLI 명령어를 위한 Python 서비스
+- **Server**: `localhost:4000` - NestJS API 서버(챗 응답 + 배치 인제스트 프록시)
+- **RAG Engine**: FastAPI(기본 5050 포트) + CLI
 
 ### 서비스 상태 확인
 
@@ -129,7 +129,7 @@ EMBEDDING_DEVICE=cpu
 # 검색 설정
 DEFAULT_TOP_K=5
 
-# OpenRouter 설정 (선택사항)
+# OpenRouter 설정 (서버/엔진에서 사용)
 OPENROUTER_API_KEY=your_api_key_here
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OPENROUTER_MODEL=openai/gpt-5-nano

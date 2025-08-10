@@ -26,6 +26,9 @@ services:
       - CORS_ORIGIN=http://localhost:3000
       - RAG_ENGINE_HOST=rag-engine
       - RAG_ENGINE_PORT=5050
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-openai/gpt-5-nano}
     depends_on:
       - chromadb
       - rag-engine
