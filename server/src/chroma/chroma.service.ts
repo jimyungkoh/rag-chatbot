@@ -5,6 +5,7 @@ import type {
   ChromaGetResult,
   ChromaQueryResult,
   IncludeKey,
+  ChromaAddParams,
 } from './types';
 import { toIncludeEnums } from './types';
 
@@ -45,7 +46,13 @@ export class ChromaService {
             (allowed as readonly string[]).includes(x),
           )
         : ['documents', 'metadatas'];
-    const res = await col.get({ limit, include: toIncludeEnums(inc) });
+
+    const includeEnums = toIncludeEnums(inc);
+    const getParams = includeEnums
+      ? { limit, include: includeEnums }
+      : { limit };
+
+    const res = await col.get(getParams);
     return res;
   }
 
@@ -63,17 +70,26 @@ export class ChromaService {
   }): Promise<{ added: number }> {
     const { name, ids, embeddings, documents, metadatas } = args;
     const col = await this.getCollection(name);
-    if (embeddings && documents) {
-      await col.add({ ids, embeddings, documents, metadatas });
-    } else if (embeddings) {
-      await col.add({ ids, embeddings, metadatas });
-    } else if (documents) {
-      await col.add({ ids, documents, metadatas });
-    } else {
+
+    if (!embeddings && !documents) {
       throw new Error(
         'embeddings 또는 documents 중 하나는 반드시 제공해야 합니다.',
       );
     }
+
+    const addParams: Partial<ChromaAddParams> = { ids };
+
+    if (embeddings) {
+      addParams.embeddings = embeddings;
+    }
+    if (documents) {
+      addParams.documents = documents;
+    }
+    if (metadatas) {
+      addParams.metadatas = metadatas;
+    }
+
+    await col.add(addParams as ChromaAddParams);
     return { added: ids.length };
   }
 
@@ -95,20 +111,35 @@ export class ChromaService {
     const inc: IncludeKey[] | undefined = include?.filter(
       (x): x is IncludeKey => (allowed as readonly string[]).includes(x),
     );
+
     if (!queryEmbeddings && !queryTexts) {
       throw new Error(
         'queryEmbeddings 또는 queryTexts 중 하나는 반드시 제공해야 합니다.',
       );
     }
-    const res = await col.query(
-      queryEmbeddings && !queryTexts
-        ? { queryEmbeddings, nResults, include: toIncludeEnums(inc) }
-        : {
-            queryTexts: queryTexts as string[],
-            nResults,
-            include: toIncludeEnums(inc),
-          },
-    );
+
+    const includeEnums = toIncludeEnums(inc);
+
+    // Build query parameters based on query type (embeddings or texts, but not both)
+    let queryParams;
+
+    if (queryEmbeddings && !queryTexts) {
+      queryParams = {
+        queryEmbeddings,
+        ...(nResults !== undefined && { nResults }),
+        ...(includeEnums && { include: includeEnums }),
+      };
+    } else if (queryTexts) {
+      queryParams = {
+        queryTexts,
+        ...(nResults !== undefined && { nResults }),
+        ...(includeEnums && { include: includeEnums }),
+      };
+    } else {
+      throw new Error('유효한 query 파라미터가 없습니다.');
+    }
+
+    const res = await col.query(queryParams);
     return res;
   }
 }
